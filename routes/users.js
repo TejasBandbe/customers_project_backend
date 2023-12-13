@@ -131,18 +131,36 @@ usersRouter.post('/assignment', verifyToken, async(request, response) => {
 //api to get customer list
 usersRouter.get('/assignment', verifyToken, async(request, response) => {
     try{
-        if(request.query.cmd !== "get_customer_list"){
+        if(request.query.cmd === "get_customer_list"){
+            const statement = `select uuid, first_name, last_name, street, address, city, state, 
+            email, phone from users_table`;
+
+            const data = await executeQuery(statement);
+            if(data.length !== 0){
+                response.status(200).send(data);
+            }else{
+                response.status(200).send({data, "msg": "no customers added"});
+            }
+        }
+        else if(request.query.cmd === "get_customer_list_by_uuid"){
+            if(request.query.uuid !== undefined){
+                const statement = `select uuid, first_name, last_name, street, address, city, state, 
+                email, phone from users_table where uuid = ${request.query.uuid}`;
+
+                const data = await executeQuery(statement);
+                if(data.length !== 0){
+                    response.status(200).send(data);
+                }else{
+                    response.status(200).send({data, "msg": "no customers added"});
+                }
+            }
+            else{
+                response.status(404).send("UUID not found");
+            }
+        }
+        else{
             response.status(500).send("Invalid command");
             return;
-        }
-        const statement = `select first_name, last_name, street, address, city, state, 
-        email, phone from users_table`;
-
-        const data = await executeQuery(statement);
-        if(data.length !== 0){
-            response.status(200).send(data);
-        }else{
-            response.status(200).send({data, "msg": "no customers added"});
         }
     }catch(error){
         response.status(400).send("Something went wrong");
